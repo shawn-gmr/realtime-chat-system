@@ -1,0 +1,6 @@
+{
+    "name": "@chat-system/contracts",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Contract packaging metadata for chat API artifacts"
+}

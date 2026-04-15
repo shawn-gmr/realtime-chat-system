@@ -1,0 +1,35 @@
+[project]
+name = "chat-system-api"
+version = "0.1.0"
+description = "FastAPI backend for the real-time chat system"
+requires-python = ">=3.13"
+dependencies = [
+  "alembic>=1.14,<2.0",
+  "fastapi>=0.116,<1.0",
+  "httpx>=0.28,<1.0",
+  "pydantic>=2.11,<3.0",
+  "pydantic-settings>=2.8,<3.0",
+  "python-json-logger>=3.3,<4.0",
+  "sqlalchemy[asyncio]>=2.0.40,<3.0",
+  "uvicorn[standard]>=0.35,<1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "aiosqlite>=0.21,<1.0",
+  "pytest>=8.3,<9.0",
+  "pytest-asyncio>=0.26,<1.0",
+  "ruff>=0.11,<1.0",
+]
+
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"

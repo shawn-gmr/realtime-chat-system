@@ -1,0 +1,171 @@
+openapi: 3.1.0
+info:
+  title: Chat HTTP API
+  version: 0.1.0
+  description: HTTP contracts for paginated history and presence reads used by the real-time chat feature.
+servers:
+  - url: https://api.example.com
+paths:
+  /api/conversations/{conversation_id}/messages:
+    get:
+      summary: Get paginated conversation history
+      operationId: get_conversation_messages
+      security:
+        - bearer_auth: []
+      parameters:
+        - $ref: '#/components/parameters/conversation_id'
+        - name: before_message_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Paginated history ordered newest-to-oldest in transport, preserving stable sequence numbers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/message_history_response'
+        '403':
+          description: User is not a participant in the conversation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_response'
+  /api/conversations/{conversation_id}/presence:
+    get:
+      summary: Get current global presence for participants in a conversation
+      operationId: get_conversation_presence
+      security:
+        - bearer_auth: []
+      parameters:
+        - $ref: '#/components/parameters/conversation_id'
+      responses:
+        '200':
+          description: Global presence roster for users who participate in the specified conversation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation_id
+                  - participants
+                properties:
+                  conversation_id:
+                    type: string
+                    format: uuid
+                  participants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/presence_entry'
+        '403':
+          description: User is not a participant in the conversation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error_response'
+components:
+  securitySchemes:
+    bearer_auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    conversation_id:
+      name: conversation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    message:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - sender_id
+        - body
+        - sent_at
+        - sequence_number
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        sequence_number:
+          type: integer
+          format: int64
+    message_history_response:
+      type: object
+      required:
+        - conversation_id
+        - messages
+        - has_more
+      properties:
+        conversation_id:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/message'
+        has_more:
+          type: boolean
+        next_before_message_id:
+          type: string
+          format: uuid
+          nullable: true
+    presence_entry:
+      type: object
+      required:
+        - user_id
+        - status
+        - last_activity_at
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [online, away, offline]
+        last_activity_at:
+          type: string
+          format: date-time
+        last_connected_at:
+          type: string
+          format: date-time
+          nullable: true
+        scope:
+          type: string
+          enum: [global]
+          default: global
+    error_response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string

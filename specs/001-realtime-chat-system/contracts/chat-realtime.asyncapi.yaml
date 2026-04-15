@@ -1,0 +1,247 @@
+asyncapi: 2.6.0
+info:
+  title: Chat Realtime API
+  version: 0.1.0
+  description: WebSocket contracts for live messaging, reconnect replay, heartbeats, and global user presence updates within a conversation context.
+servers:
+  production:
+    url: api.example.com
+    protocol: wss
+    description: Stateless WebSocket endpoint fronting the chat API service.
+channels:
+  /ws/conversations/{conversation_id}:
+    parameters:
+      conversation_id:
+        schema:
+          type: string
+          format: uuid
+    subscribe:
+      summary: Server-to-client events for one conversation, including global presence updates for shared participants.
+      message:
+        oneOf:
+          - $ref: '#/components/messages/history_synced'
+          - $ref: '#/components/messages/message_created'
+          - $ref: '#/components/messages/presence_updated'
+          - $ref: '#/components/messages/message_failed'
+    publish:
+      summary: Client-to-server commands for one conversation.
+      message:
+        oneOf:
+          - $ref: '#/components/messages/connect'
+          - $ref: '#/components/messages/send_message'
+          - $ref: '#/components/messages/heartbeat'
+          - $ref: '#/components/messages/request_history'
+components:
+  messages:
+    connect:
+      name: connect
+      payload:
+        $ref: '#/components/schemas/connect_payload'
+    send_message:
+      name: send_message
+      payload:
+        $ref: '#/components/schemas/send_message_payload'
+    heartbeat:
+      name: heartbeat
+      payload:
+        $ref: '#/components/schemas/heartbeat_payload'
+    request_history:
+      name: request_history
+      payload:
+        $ref: '#/components/schemas/request_history_payload'
+    history_synced:
+      name: history_synced
+      payload:
+        $ref: '#/components/schemas/history_synced_payload'
+    message_created:
+      name: message_created
+      payload:
+        $ref: '#/components/schemas/message_created_payload'
+    presence_updated:
+      name: presence_updated
+      payload:
+        $ref: '#/components/schemas/presence_updated_payload'
+    message_failed:
+      name: message_failed
+      payload:
+        $ref: '#/components/schemas/message_failed_payload'
+  schemas:
+    connect_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+      properties:
+        type:
+          type: string
+          const: connect
+        conversation_id:
+          type: string
+          format: uuid
+        last_seen_message_id:
+          type: string
+          format: uuid
+          nullable: true
+    send_message_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+        - client_message_id
+        - body
+      properties:
+        type:
+          type: string
+          const: send_message
+        conversation_id:
+          type: string
+          format: uuid
+        client_message_id:
+          type: string
+          format: uuid
+        body:
+          type: string
+    heartbeat_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+      properties:
+        type:
+          type: string
+          const: heartbeat
+        conversation_id:
+          type: string
+          format: uuid
+    request_history_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+      properties:
+        type:
+          type: string
+          const: request_history
+        conversation_id:
+          type: string
+          format: uuid
+        before_message_id:
+          type: string
+          format: uuid
+          nullable: true
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    history_synced_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+        - messages
+        - replay_complete
+      properties:
+        type:
+          type: string
+          const: history_synced
+        conversation_id:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/message'
+        replay_complete:
+          type: boolean
+    message_created_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+        - message
+      properties:
+        type:
+          type: string
+          const: message_created
+        conversation_id:
+          type: string
+          format: uuid
+        message:
+          $ref: '#/components/schemas/message'
+    presence_updated_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+        - user_id
+        - status
+        - last_activity_at
+      properties:
+        type:
+          type: string
+          const: presence_updated
+        conversation_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [online, away, offline]
+        last_activity_at:
+          type: string
+          format: date-time
+        scope:
+          type: string
+          enum: [global]
+          default: global
+    message_failed_payload:
+      type: object
+      required:
+        - type
+        - conversation_id
+        - client_message_id
+        - code
+        - message
+      properties:
+        type:
+          type: string
+          const: message_failed
+        conversation_id:
+          type: string
+          format: uuid
+        client_message_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        message:
+          type: string
+    message:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - sender_id
+        - body
+        - sent_at
+        - sequence_number
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        body:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        sequence_number:
+          type: integer
+          format: int64
