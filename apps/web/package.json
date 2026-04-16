@@ -4,7 +4,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsc --noEmit",
+        "dev": "vite",
+        "build": "tsc --noEmit && vite build",
         "test": "vitest run",
         "test:e2e": "playwright test"
     },
@@ -15,12 +16,14 @@
         "react-dom": "^19.0.0"
     },
     "devDependencies": {
+        "@vitejs/plugin-react": "^4.5.2",
         "@playwright/test": "^1.52.0",
         "@testing-library/react": "^16.3.0",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
         "jsdom": "^26.1.0",
         "typescript": "^5.8.3",
+        "vite": "^7.1.10",
         "vitest": "^3.1.2"
     }
 }

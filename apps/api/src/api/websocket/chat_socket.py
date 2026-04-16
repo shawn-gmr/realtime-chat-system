@@ -27,7 +27,10 @@ class ConversationHub:
 
     async def broadcast_json(self, conversation_id: uuid.UUID, payload: dict[str, object]) -> None:
         for websocket in list(self._connections[conversation_id]):
-            await websocket.send_json(payload)
+            try:
+                await websocket.send_json(payload)
+            except (RuntimeError, WebSocketDisconnect):
+                self._connections[conversation_id].discard(websocket)
 
 
 hub = ConversationHub()

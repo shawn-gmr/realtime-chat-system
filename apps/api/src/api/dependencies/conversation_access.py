@@ -36,8 +36,9 @@ async def require_websocket_participant(
     websocket: WebSocket, conversation_id: uuid.UUID, session: AsyncSession
 ) -> uuid.UUID:
     user_id_header = websocket.headers.get("x-user-id")
+    user_id_query = websocket.query_params.get("user_id")
     try:
-        user_id = uuid.UUID(user_id_header or "")
+        user_id = uuid.UUID(user_id_header or user_id_query or "")
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_auth") from exc
     repo = ChatRepository(session)

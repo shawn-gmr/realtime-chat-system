@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type {
   PresenceEntry,
@@ -20,7 +20,7 @@ export function useParticipantPresence(
     );
   }, [apiBaseUrl, conversationId, userId]);
 
-  const applyPresenceEvent = (event: PresenceUpdatedEvent) => {
+  const applyPresenceEvent = useCallback((event: PresenceUpdatedEvent) => {
     setEntries((currentEntries) => {
       const nextEntries = currentEntries.filter(
         (entry) => entry.user_id !== event.user_id,
@@ -33,13 +33,13 @@ export function useParticipantPresence(
       });
       return nextEntries;
     });
-  };
+  }, []);
 
-  const rehydratePresenceState = async () => {
+  const rehydratePresenceState = useCallback(async () => {
     setEntries(
       await fetchConversationPresence(apiBaseUrl, conversationId, userId),
     );
-  };
+  }, [apiBaseUrl, conversationId, userId]);
 
   return { entries, applyPresenceEvent, rehydratePresenceState };
 }
